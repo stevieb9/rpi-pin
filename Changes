@@ -16,6 +16,12 @@ Revision history for RPi-Pin
           interrupt in a forked background process (fires even while main is
           busy); returns a handle with stop/pid/running. Maps to
           WiringPi::API::background_interrupt()
+        - background_interrupt() now forwards an optional trailing options
+          hashref (eg. {results => 1}, which ships the handler's return value
+          back to the parent via the handle's read()/fh())
+        - set_interrupt() now forwards an optional trailing options hashref too
+          (eg. {auto_dispatch => 1} or {auto_dispatch => 'USR1'}, which turns on
+          auto-dispatch as part of arming)
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on

@@ -100,7 +100,12 @@ sub num {
     return $_[0]->{pin};
 }
 sub background_interrupt {
-    my ($self, $edge, $callback, $debounce_us) = @_;
+    my ($self, $edge, $callback, @rest) = @_;
+
+    # An optional trailing options hashref (eg. {results => 1}) may follow the
+    # optional debounce; forward it through to WiringPi::API unchanged.
+    my $opts = (@rest && ref $rest[-1] eq 'HASH') ? pop @rest : undef;
+    my ($debounce_us) = @rest;
 
     if (! defined $edge || $edge !~ /^[123]$/) {
         croak "background_interrupt() \$edge must be EDGE_FALLING (1), " .
@@ -115,12 +120,19 @@ sub background_interrupt {
         croak "background_interrupt() \$debounce_us must be a non-negative integer";
     }
 
-    return WiringPi::API::background_interrupt(
-        $self->num, $edge, $callback, $debounce_us
-    );
+    my @args = ($self->num, $edge, $callback);
+    push @args, $debounce_us if defined $debounce_us;
+    push @args, $opts if $opts;
+
+    return WiringPi::API::background_interrupt(@args);
 }
 sub set_interrupt {
-    my ($self, $edge, $callback, $debounce_us) = @_;
+    my ($self, $edge, $callback, @rest) = @_;
+
+    # An optional trailing options hashref (eg. {auto_dispatch => 1}) may follow
+    # the optional debounce; forward it through to WiringPi::API unchanged.
+    my $opts = (@rest && ref $rest[-1] eq 'HASH') ? pop @rest : undef;
+    my ($debounce_us) = @rest;
 
     if (! defined $edge || $edge !~ /^[123]$/) {
         croak "set_interrupt() \$edge must be EDGE_FALLING (1), " .
@@ -135,7 +147,11 @@ sub set_interrupt {
         croak "set_interrupt() \$debounce_us must be a non-negative integer";
     }
 
-    WiringPi::API::set_interrupt($self->num, $edge, $callback, $debounce_us);
+    my @args = ($self->num, $edge, $callback);
+    push @args, $debounce_us if defined $debounce_us;
+    push @args, $opts if $opts;
+
+    WiringPi::API::set_interrupt(@args);
 }
 sub interrupt_set {
     my ($self, $edge, $callback, $debounce_us) = @_;
@@ -299,6 +315,14 @@ Returns a handle:
 A handle going out of scope stops its child, and a forgotten C<stop> is reaped
 at program exit.
 
+An optional trailing options hash reference is forwarded to L<WiringPi::API>;
+C<< { results => 1 } >> ships the handler's defined return value back to the
+parent, drained with C<< $h->read >> (and C<< $h->fh >> for C<select>):
+
+    my $h = $pin->background_interrupt(EDGE_RISING, sub { return "hit" },
+        { results => 1 });
+    while (defined(my $msg = $h->read)) { print "$msg\n" }
+
 =head2 set_interrupt($edge, $callback, $debounce_us)
 
 Listen for an interrupt on a pin, and do something if it is triggered.
@@ -326,6 +350,17 @@ C<< $pi->dispatch_interrupts >>).
 
 Optional: debounce window in microseconds. Edges arriving within this window of
 the previous accepted edge are ignored. Defaults to C<0> (no debounce).
+
+    \%opts
+
+Optional: a trailing options hash reference, forwarded to L<WiringPi::API>. The
+C<auto_dispatch> option turns on auto-dispatch as part of arming so the callback
+fires without your own dispatch loop (process-wide; see
+C<< $pi->auto_dispatch_interrupts >>):
+
+    $pin->set_interrupt(EDGE_RISING, \&handler, { auto_dispatch => 1 });
+    # or choose the delivery signal:
+    $pin->set_interrupt(EDGE_RISING, \&handler, { auto_dispatch => 'USR1' });
 
 =head2 interrupt_set
 
