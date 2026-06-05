@@ -22,6 +22,9 @@ Revision history for RPi-Pin
         - set_interrupt() now forwards an optional trailing options hashref too
           (eg. {auto_dispatch => 1} or {auto_dispatch => 'USR1'}, which turns on
           auto-dispatch as part of arming)
+        - Added lib/INTERRUPTS.md: a guide to arming interrupts on a pin
+          (set_interrupt / background_interrupt, the dispatch gotcha, the results
+          channel) and where the process-level dispatch methods live
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on
