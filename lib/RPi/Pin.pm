@@ -5,6 +5,8 @@ use warnings;
 
 use parent 'WiringPi::API';
 
+use Carp qw(croak);
+
 our $VERSION = '2.3609';
 
 sub new {
@@ -97,13 +99,47 @@ sub pwm {
 sub num {
     return $_[0]->{pin};
 }
+sub background_interrupt {
+    my ($self, $edge, $callback, $debounce_us) = @_;
+
+    if (! defined $edge || $edge !~ /^[123]$/) {
+        croak "background_interrupt() \$edge must be EDGE_FALLING (1), " .
+            "EDGE_RISING (2) or EDGE_BOTH (3)";
+    }
+
+    if (! defined $callback || ref $callback ne 'CODE') {
+        croak "background_interrupt() requires \$callback to be a CODE reference";
+    }
+
+    if (defined $debounce_us && $debounce_us !~ /^\d+$/) {
+        croak "background_interrupt() \$debounce_us must be a non-negative integer";
+    }
+
+    return WiringPi::API::background_interrupt(
+        $self->num, $edge, $callback, $debounce_us
+    );
+}
 sub set_interrupt {
-    my ($self, $edge, $callback) = @_;
-    WiringPi::API::set_interrupt($self->num, $edge, $callback);
+    my ($self, $edge, $callback, $debounce_us) = @_;
+
+    if (! defined $edge || $edge !~ /^[123]$/) {
+        croak "set_interrupt() \$edge must be EDGE_FALLING (1), " .
+            "EDGE_RISING (2) or EDGE_BOTH (3)";
+    }
+
+    if (! defined $callback || ref $callback ne 'CODE') {
+        croak "set_interrupt() requires \$callback to be a CODE reference";
+    }
+
+    if (defined $debounce_us && $debounce_us !~ /^\d+$/) {
+        croak "set_interrupt() \$debounce_us must be a non-negative integer";
+    }
+
+    WiringPi::API::set_interrupt($self->num, $edge, $callback, $debounce_us);
 }
 sub interrupt_set {
-    my ($self, $edge, $callback) = @_;
-    $self->set_interrupt($self->num, $edge, $callback);
+    my ($self, $edge, $callback, $debounce_us) = @_;
+    $self->set_interrupt($edge, $callback, $debounce_us);
 }
 sub _vim{1;};
 1;
@@ -123,7 +159,7 @@ RPi::Pin - Access and manipulate Raspberry Pi GPIO pins
     $pin->mode(INPUT);
     $pin->write(LOW);
 
-    $pin->set_interrupt(EDGE_RISING, 'main::pin5_interrupt_handler');
+    $pin->set_interrupt(EDGE_RISING, \&pin5_interrupt_handler);
 
     my $num = $pin->num;
     my $mode = $pin->mode;
@@ -241,7 +277,29 @@ Parameter:
 Mandatory: C<2> for C<PUD_UP>, C<1> for C<PUD_DOWN> and C<0> for C<PUD_OFF>
 (disabled the resistor).
 
-=head2 set_interrupt($edge, $callback)
+=head2 background_interrupt($edge, $callback, $debounce_us)
+
+Like C<set_interrupt()>, but handles the interrupt in a B<background process>:
+the library forks, arms the interrupt in the child, and runs C<$callback> there
+on each edge while your main program carries on - so it fires even while your
+main code is busy in a long blocking call.
+
+Takes the same arguments as C<set_interrupt()> (C<$debounce_us> optional), all
+validated before forking. Because the callback runs in a separate process it
+B<cannot> see or change your main program's variables; use it for independent
+handlers (drive a pin, log, notify).
+
+Returns a handle:
+
+    my $h = $pin->background_interrupt(EDGE_RISING, \&handler);
+    $h->stop;        # stop + reap the background handler (idempotent)
+    $h->pid;         # the child PID
+    $h->running;     # true while the child is alive
+
+A handle going out of scope stops its child, and a forgotten C<stop> is reaped
+at program exit.
+
+=head2 set_interrupt($edge, $callback, $debounce_us)
 
 Listen for an interrupt on a pin, and do something if it is triggered.
 
@@ -254,10 +312,20 @@ C<EDGE_BOTH>.
 
     $callback
 
-The string name of a Perl subroutine that you've already written within your
-code. This is the interrupt handler. When an interrupt is triggered, the code
-in this subroutine will run. If you get errors when the handler is called,
-specify the full package name to the handler (eg: C<'main::callback'>).
+Mandatory: a code reference (eg: C<\&my_handler> or C<sub {...}>) to run when
+the interrupt fires. The callback receives C<($edge, $timestamp_us)>.
+
+B<Note:> as of C<WiringPi::API> 3.18 the interrupt is dispatched in Perl rather
+than from the wiringPi ISR thread, so the callback B<must> be a code reference;
+a string sub name is no longer accepted. The callback also only runs when your
+program services the interrupt file descriptor, so you must drive dispatch (eg.
+C<< $pi->wait_interrupts($timeout_ms) >> in a loop, or
+C<< $pi->dispatch_interrupts >>).
+
+    $debounce_us
+
+Optional: debounce window in microseconds. Edges arriving within this window of
+the previous accepted edge are ignored. Defaults to C<0> (no debounce).
 
 =head2 interrupt_set
 

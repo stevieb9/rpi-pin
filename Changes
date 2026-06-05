@@ -4,6 +4,18 @@ Revision history for RPi-Pin
         - pwm() now does a check for the UID of the calling user, and if it's
           not root, we die (closes #7)
         - add "comment"/label feature to SYNOPSIS (closes #5)
+        - set_interrupt() now requires $callback to be a CODE reference (the
+          WiringPi::API 3.18 self-pipe model dispatches in Perl); a string sub
+          name is no longer accepted. Validates $edge, $callback and the new
+          optional $debounce_us argument
+        - set_interrupt()/interrupt_set() now accept an optional 4th argument,
+          $debounce_us (debounce window in microseconds)
+        - interrupt_set() now correctly delegates to set_interrupt() (it was
+          passing the pin number in place of the edge)
+        - Added background_interrupt($edge, $callback, $debounce_us): handles the
+          interrupt in a forked background process (fires even while main is
+          busy); returns a handle with stop/pid/running. Maps to
+          WiringPi::API::background_interrupt()
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on
