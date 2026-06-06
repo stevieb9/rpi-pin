@@ -25,6 +25,13 @@ Revision history for RPi-Pin
         - Added lib/INTERRUPTS.md: a guide to arming interrupts on a pin
           (set_interrupt / background_interrupt, the dispatch gotcha, the results
           channel) and where the process-level dispatch methods live
+        - Now uses RPi::Const internally: mode() and pwm() validate against the
+          named pin-mode constants (INPUT/OUTPUT/PWM_OUT/GPIO_CLOCK) and pull()
+          against PUD_OFF/PUD_DOWN/PUD_UP instead of magic integers. Added
+          RPi::Const 1.04 as a prerequisite
+        - Fixed a misleading inline comment in pull() that had the direction
+          values backwards (it read "0 == down, 1 == up, 2 == off"; the correct
+          mapping is PUD_OFF 0, PUD_DOWN 1, PUD_UP 2, as the POD already stated)
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on

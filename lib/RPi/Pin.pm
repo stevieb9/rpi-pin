@@ -6,6 +6,7 @@ use warnings;
 use parent 'WiringPi::API';
 
 use Carp qw(croak);
+use RPi::Const qw(:all);
 
 our $VERSION = '2.3609';
 
@@ -44,7 +45,7 @@ sub mode {
         return $self->get_alt($self->num);
     }
 
-    if ($mode != 0 && $mode != 1 && $mode != 2 && $mode != 3){
+    if ($mode != INPUT && $mode != OUTPUT && $mode != PWM_OUT && $mode != GPIO_CLOCK){
         die "mode() mode param must be either 0 (input), 1 " .
             "(output), 2 (PWM output) or 3 (GPIO CLOCK output)\n";
     }
@@ -74,9 +75,9 @@ sub write {
 sub pull {
     my ($self, $direction) = @_;
 
-    # 0 == down, 1 == up, 2 == off
+    # PUD_OFF == 0, PUD_DOWN == 1, PUD_UP == 2
 
-    if ($direction != 0 && $direction != 1 && $direction != 2){
+    if ($direction != PUD_OFF && $direction != PUD_DOWN && $direction != PUD_UP){
         die "Core::pull_up_down requires either 0, 1 or 2 for direction";
     }
 
@@ -89,7 +90,7 @@ sub pwm {
         die "\nPWM requires your script to be run as the 'root' user (sudo)\n";
     }
 
-    if ($self->mode != 2 && $self->num == 18){
+    if ($self->mode != PWM_OUT && $self->num == 18){
         my $num = $self->num;
         die "\npin $num isn't set to mode 2 (PWM). pwm() can't be set\n";
     }
