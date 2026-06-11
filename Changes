@@ -32,6 +32,12 @@ Revision history for RPi-Pin
         - Fixed a misleading inline comment in pull() that had the direction
           values backwards (it read "0 == down, 1 == up, 2 == off"; the correct
           mapping is PUD_OFF 0, PUD_DOWN 1, PUD_UP 2, as the POD already stated)
+        - t/40-interrupt_and_pud.t now passes the handler as a CODE reference
+          (string sub names are no longer accepted) and calls
+          wait_interrupts(500) before each assertion per the 3.18 dispatch
+          model
+        - t/15-pwm.t now accepts the Pi 5 ALT value for GPIO 18 hardware PWM
+          (ALT3/7 via RP1) in addition to the Pi 1-4 value (ALT5/2)
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on

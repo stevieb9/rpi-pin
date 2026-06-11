@@ -49,7 +49,7 @@ if (! $ENV{NO_BOARD}){
     my $pin = $mod->new(18);
 
     # EDGE_RISING
-    $pin->set_interrupt(2, 'main::handler');
+    $pin->set_interrupt(2, \&main::handler);
 
     $pin->pull(1); # PUD_DOWN
 
@@ -58,6 +58,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(2); # PUD_UP
     $pin->pull(1); # PUD_DOWN
 
+    $pin->wait_interrupts(500);
     is $ENV{PI_INTERRUPT}, 1, "1st interrupt ok";
 
     # trigger the interrupt
@@ -65,6 +66,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(2); # PUD_UP
     $pin->pull(1); # PUD_DOWN
     
+    $pin->wait_interrupts(500);
     is $ENV{PI_INTERRUPT}, 2, "2nd interrupt ok";
 
     # trigger the interrupt
@@ -72,6 +74,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(2); # PUD_UP
     $pin->pull(1); # PUD_DOWN
     
+    $pin->wait_interrupts(500);
     is $ENV{PI_INTERRUPT}, 3, "3rd interrupt ok";
 
     # trigger the interrupt
@@ -79,6 +82,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(2); # PUD_UP
     $pin->pull(1); # PUD_DOWN
     
+    $pin->wait_interrupts(500);
     is $ENV{PI_INTERRUPT}, 4, "4th interrupt ok";
  
     # trigger the interrupt
@@ -86,6 +90,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(2); # PUD_UP
     $pin->pull(1); # PUD_DOWN
     
+    $pin->wait_interrupts(500);
     is $ENV{PI_INTERRUPT}, 5, "5th interrupt ok";
 
 }

@@ -31,7 +31,11 @@ if ($> != 0){
     if (! $ENV{NO_BOARD}) {
         my $pin = $mod->new(18);
         $pin->mode(2);
-        is $pin->mode, 2, "pin mode set to PWM ok, and we can read it";
+
+        # GPIO 18 hardware PWM is ALT5 (2) on Pi 1-4, ALT3 (7) on Pi 5
+
+        my $alt = $pin->mode;
+        ok $alt == 2 || $alt == 7, "pin mode set to PWM ok, and we can read it ($alt)";
         $pin->mode(0);
         is $pin->mode, 0, "pin mode set back to INPUT";
     }
