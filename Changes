@@ -38,6 +38,10 @@ Revision history for RPi-Pin
           model
         - t/15-pwm.t now accepts the Pi 5 ALT value for GPIO 18 hardware PWM
           (ALT3/7 via RP1) in addition to the Pi 1-4 value (ALT5/2)
+        - The sudo re-exec in t/15 and t/40 now uses $^X with the blib paths
+          and re-feeds the gate env var; the bare 'sudo perl' resolved to the
+          system perl, which died with "Can't locate RPi/Pin.pm" when the
+          suite was run as non-root
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on
