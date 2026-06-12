@@ -1,6 +1,7 @@
+.claude/settings.local.json
 Changes
+docs/pod.md
 ignore.txt
-lib/INTERRUPTS.md
 lib/RPi/Pin.pm
 Makefile.PL
 MANIFEST			This list of files

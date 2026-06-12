@@ -1,6 +1,6 @@
 Revision history for RPi-Pin
 
-2.3609 UNREL
+2.3609    2026-06-12
         - pwm() now does a check for the UID of the calling user, and if it's
           not root, we die (closes #7)
         - add "comment"/label feature to SYNOPSIS (closes #5)
