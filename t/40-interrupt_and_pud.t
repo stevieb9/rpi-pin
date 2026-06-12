@@ -16,12 +16,12 @@ BEGIN {
     }
 
     if ($> == 0){
-        $ENV{PI_BOARD} = 1;
+        $ENV{RPI_BOARD} = 1;
         $run = 1;
     }
 
-    if (! $ENV{PI_BOARD}){
-        warn "\n*** PI_BOARD is not set! ***\n";
+    if (! $ENV{RPI_BOARD}){
+        warn "\n*** RPI_BOARD is not set! ***\n";
         $ENV{NO_BOARD} = 1;
         plan skip_all => "not on a pi board\n";
     }
@@ -39,13 +39,12 @@ BEGIN {
     }
 }
 
-BEGIN {
-    my $c;
+# In-process interrupt callback counter (a file lexical, not an env var gate)
 
-    sub handler {
-        $c++;
-        $ENV{PI_INTERRUPT} = $c;
-    }
+my $interrupts = 0;
+
+sub handler {
+    $interrupts++;
 }
 
 # pin specific interrupts
@@ -65,7 +64,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(1); # PUD_DOWN
 
     $pin->wait_interrupts(500);
-    is $ENV{PI_INTERRUPT}, 1, "1st interrupt ok";
+    is $interrupts, 1, "1st interrupt ok";
 
     # trigger the interrupt
 
@@ -73,7 +72,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(1); # PUD_DOWN
     
     $pin->wait_interrupts(500);
-    is $ENV{PI_INTERRUPT}, 2, "2nd interrupt ok";
+    is $interrupts, 2, "2nd interrupt ok";
 
     # trigger the interrupt
 
@@ -81,7 +80,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(1); # PUD_DOWN
     
     $pin->wait_interrupts(500);
-    is $ENV{PI_INTERRUPT}, 3, "3rd interrupt ok";
+    is $interrupts, 3, "3rd interrupt ok";
 
     # trigger the interrupt
 
@@ -89,7 +88,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(1); # PUD_DOWN
     
     $pin->wait_interrupts(500);
-    is $ENV{PI_INTERRUPT}, 4, "4th interrupt ok";
+    is $interrupts, 4, "4th interrupt ok";
  
     # trigger the interrupt
 
@@ -97,7 +96,7 @@ if (! $ENV{NO_BOARD}){
     $pin->pull(1); # PUD_DOWN
     
     $pin->wait_interrupts(500);
-    is $ENV{PI_INTERRUPT}, 5, "5th interrupt ok";
+    is $interrupts, 5, "5th interrupt ok";
 
 }
 

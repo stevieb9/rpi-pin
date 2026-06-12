@@ -11,11 +11,11 @@ if (! $ENV{RPI_SUBMODULE_TESTING}){
 }
 
 if ($> == 0){
-    $ENV{PI_BOARD} = 1;
+    $ENV{RPI_BOARD} = 1;
 }
 
-if (! $ENV{PI_BOARD}){
-    warn "\n*** PI_BOARD is not set! ***\n";
+if (! $ENV{RPI_BOARD}){
+    warn "\n*** RPI_BOARD is not set! ***\n";
     $ENV{NO_BOARD} = 1;
     plan skip_all => "not on a pi board\n";
 }

@@ -42,6 +42,9 @@ Revision history for RPi-Pin
           and re-feeds the gate env var; the bare 'sudo perl' resolved to the
           system perl, which died with "Can't locate RPi/Pin.pm" when the
           suite was run as non-root
+        - The test suite board gate is now RPI_BOARD (ecosystem-wide rename
+          from PI_BOARD); the old name is no longer honored. t/40's interrupt
+          callback counter is a file lexical now instead of $ENV{PI_INTERRUPT}
 
 2.3608  2019-10-19
         - add extra environment checks, and disable tests if required (work on
