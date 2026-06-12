@@ -8,7 +8,7 @@ use parent 'WiringPi::API';
 use Carp qw(croak);
 use RPi::Const qw(:all);
 
-our $VERSION = '2.3609';
+our $VERSION = '3.1801';
 
 sub new {
     my ($class, $pin, $comment) = @_;
@@ -158,7 +158,9 @@ sub interrupt_set {
     my ($self, $edge, $callback, $debounce_us) = @_;
     $self->set_interrupt($edge, $callback, $debounce_us);
 }
+
 sub _vim{1;};
+
 1;
 __END__
 
@@ -176,15 +178,19 @@ RPi::Pin - Access and manipulate Raspberry Pi GPIO pins
     $pin->mode(INPUT);
     $pin->write(LOW);
 
-    $pin->set_interrupt(EDGE_RISING, \&pin5_interrupt_handler);
-
     my $num = $pin->num;
     my $mode = $pin->mode;
     my $state = $pin->read;
 
     print "pin number $num is in mode $mode with state $state\n";
 
+    # As of WiringPi::API 3.18 the callback fires only while dispatch is
+    # serviced; { auto_dispatch => 1 } services it for you (fire and forget).
+
+    $pin->set_interrupt(EDGE_RISING, \&pin5_interrupt_handler, { auto_dispatch => 1 });
+
     sub pin5_interrupt_handler {
+        my ($edge, $timestamp_us) = @_;
         print "in interrupt handler\n";
     }
 
@@ -294,7 +300,12 @@ Parameter:
 Mandatory: C<2> for C<PUD_UP>, C<1> for C<PUD_DOWN> and C<0> for C<PUD_OFF>
 (disabled the resistor).
 
-=head2 background_interrupt($edge, $callback, $debounce_us)
+=head2 background_interrupt($edge, $callback, $debounce_us, \%opts)
+
+Interrupts are armed on the pin but driven through the Pi object. For the
+per-method reference see L<RPi::WiringPi/"INTERRUPT METHODS">, and for full
+runnable examples - driving dispatch, auto-dispatch, the background results
+channel and teardown - see L<RPi::WiringPi::INTERRUPTS>.
 
 Like C<set_interrupt()>, but handles the interrupt in a B<background process>:
 the library forks, arms the interrupt in the child, and runs C<$callback> there
@@ -309,9 +320,10 @@ handlers (drive a pin, log, notify).
 Returns a handle:
 
     my $h = $pin->background_interrupt(EDGE_RISING, \&handler);
-    $h->stop;        # stop + reap the background handler (idempotent)
-    $h->pid;         # the child PID
-    $h->running;     # true while the child is alive
+
+    $h->stop;        # Stop + reap the background handler (idempotent)
+    $h->pid;         # The child PID
+    $h->running;     # True while the child is alive
 
 A handle going out of scope stops its child, and a forgotten C<stop> is reaped
 at program exit.
@@ -320,13 +332,22 @@ An optional trailing options hash reference is forwarded to L<WiringPi::API>;
 C<< { results => 1 } >> ships the handler's defined return value back to the
 parent, drained with C<< $h->read >> (and C<< $h->fh >> for C<select>):
 
-    my $h = $pin->background_interrupt(EDGE_RISING, sub { return "hit" },
-        { results => 1 });
+    my $h = $pin->background_interrupt(
+        EDGE_RISING,
+        sub { return "hit" },
+        { results => 1 }
+    );
+
     while (defined(my $msg = $h->read)) { print "$msg\n" }
 
-=head2 set_interrupt($edge, $callback, $debounce_us)
+=head2 set_interrupt($edge, $callback, $debounce_us, \%opts)
 
 Listen for an interrupt on a pin, and do something if it is triggered.
+
+Interrupts are armed on the pin but driven through the Pi object. For the
+per-method reference see L<RPi::WiringPi/"INTERRUPT METHODS">, and for full
+runnable examples - driving dispatch, auto-dispatch, the background results
+channel and teardown - see L<RPi::WiringPi::INTERRUPTS>.
 
 Parameters:
 
@@ -360,8 +381,13 @@ fires without your own dispatch loop (process-wide; see
 C<< $pi->auto_dispatch_interrupts >>):
 
     $pin->set_interrupt(EDGE_RISING, \&handler, { auto_dispatch => 1 });
-    # or choose the delivery signal:
+
+    # Or choose the delivery signal:
+
     $pin->set_interrupt(EDGE_RISING, \&handler, { auto_dispatch => 'USR1' });
+
+C<1> uses the default C<SIGIO>; a signal name (eg C<'USR1'>) delivers via that
+signal instead, avoiding clashes with other C<SIGIO> users in your program.
 
 =head2 interrupt_set
 
@@ -395,7 +421,7 @@ Steve Bertrand, E<lt>steveb@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2017-2019 by Steve Bertrand
+Copyright (C) 2017-2026 by Steve Bertrand
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.18.2 or,
