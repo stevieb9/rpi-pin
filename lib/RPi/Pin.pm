@@ -90,9 +90,17 @@ sub pwm {
         die "\nPWM requires your script to be run as the 'root' user (sudo)\n";
     }
 
-    if ($self->mode != PWM_OUT && $self->num == 18){
-        my $num = $self->num;
-        die "\npin $num isn't set to mode 2 (PWM). pwm() can't be set\n";
+    if ($self->num == 18){
+        # GPIO18 hardware PWM reads back via get_alt() board-specifically:
+        # ALT5 (2) on the legacy BCM chips (Pi 1-4), ALT3 (7) on the Pi 5 / RP1.
+        # The previous bare PWM_OUT (2) check only passed on the legacy boards
+        # by coincidence (PWM_OUT == ALT5) and wrongly died on the Pi 5.
+        my $pwm_alt = $self->pi_rp1_model ? ALT3 : ALT5;
+
+        if ($self->mode != $pwm_alt){
+            my $num = $self->num;
+            die "\npin $num isn't set to PWM mode. pwm() can't be set\n";
+        }
     }
 
     $self->pwm_write($self->num, $value);
