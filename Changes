@@ -6,6 +6,13 @@ Revision history for RPi-Pin
       boards by coincidence (PWM_OUT == ALT5); GPIO18 reads back as ALT3 (7)
       on the Pi 5. The guard now expects the board-appropriate alt function
       (ALT3 on the RP1, ALT5 otherwise)
+    - t/15-pwm.t now calls pwm() while the pin is in PWM mode (it previously
+      only set/read the mode), so the dist regression-guards the pin-18 guard
+      itself; switched its magic pin-mode integers to RPi::Const names
+    - pwm() POD now documents the Pi 5 / RP1 measurement note: at a given
+      range the RP1 PWM runs slower, so RC-filtered ADC feedback carries more
+      ripple and a single async sample can read several percent off (average
+      samples, raise the frequency, or filter more for a stable reading)
 
 2.3609    2026-06-12
     - pwm() now does a check for the UID of the calling user, and if it's

@@ -404,8 +404,8 @@ DEPRECATED; See C<set_interrupt()>.
 =head2 pwm($value)
 
 Sets the level of the Pulse Width Modulation (PWM) of the pin. Dies if the
-pin's C<mode()> is not set to PWM (C<2>). Note that only physical pin 12
-(wiringPi pin 1, GPIO pin 18) is PWM hardware capable. 
+pin is not in PWM mode. Note that only physical pin 12 (wiringPi pin 1, GPIO
+pin 18) is PWM hardware capable.
 
 Parameter:
 
@@ -416,6 +416,17 @@ Mandatory: values range from 0-1023. C<0> for 0% (off) and C<1023> for 100%
 
 See L<RPi/pwm_range-range> for details on how to modify the range to
 something other than C<0-1023>.
+
+B<Board note (Pi 5 / RP1) - measuring PWM output:> for a given C<range>, the
+RP1's hardware PWM runs at a lower frequency than the legacy BCM chips, so when
+the PWM output is smoothed to a DC level (e.g. an RC filter feeding an ADC for
+feedback) the residual ripple riding on that level is noticeably larger. The
+B<average> level still tracks the duty cycle accurately, but a single ADC
+sample taken asynchronously to the PWM period can read several percent off the
+true duty. The spread grows as C<range> increases (PWM frequency falls) and is
+largest around 50% duty (zero at 0% and 100%). If you need a stable reading,
+average several samples, raise the PWM frequency (a larger clock and/or a
+smaller C<range>), or add more filtering.
 
 =head2 num()
 
