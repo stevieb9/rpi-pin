@@ -13,6 +13,10 @@ Revision history for RPi-Pin
       range the RP1 PWM runs slower, so RC-filtered ADC feedback carries more
       ripple and a single async sample can read several percent off (average
       samples, raise the frequency, or filter more for a stable reading)
+    - Added t/10-validation.t: ungated, HW-free coverage of every
+      argument-validation die/croak (new/mode/write/pull/pwm-root/
+      set_interrupt/background_interrupt/interrupt_set) plus the comment/num
+      accessors, runnable without a Pi via NO_BOARD
 
 2.3609    2026-06-12
     - pwm() now does a check for the UID of the calling user, and if it's
