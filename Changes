@@ -1,5 +1,8 @@
 Revision history for RPi-Pin
 
+3.1803 UNREL
+    -
+
 3.1802    2026-07-05
     - Fixed pwm() wrongly dying on the Pi 5 / RP1. The pin-18 PWM guard
       compared get_alt() against PWM_OUT (2), which only matched the legacy

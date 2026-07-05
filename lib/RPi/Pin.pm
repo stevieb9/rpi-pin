@@ -8,7 +8,7 @@ use parent 'WiringPi::API';
 use Carp qw(croak);
 use RPi::Const qw(:all);
 
-our $VERSION = '3.1801';
+our $VERSION = '3.1803';
 
 sub new {
     my ($class, $pin, $comment) = @_;
@@ -237,7 +237,7 @@ with.
 Sets/gets a description or name for the pin.
 
 Parameters:
-    
+
     $comment
 
 Optional, String: If sent in, we'll set the pin's comment to this value.
@@ -248,7 +248,7 @@ Return: The currently set comment for the pin.
 
 Puts the pin into either C<INPUT>, C<OUTPUT>, C<PWM_OUT> or C<GPIO_CLOCK>
 mode. If C<$mode> is not sent in, we'll return the pin's current mode.
-           
+
 Parameters:
 
     $mode
@@ -260,9 +260,9 @@ and C<3> for C<GPIO_CLOCK> mode.
 =head2 mode_alt($alt)
 
 Allows you to set any pin to any mode.
-            
+
 Parameters:
-        
+
     $alt
 
 Optional: If not sent in, we'll simply return the current mode of the pin. The
